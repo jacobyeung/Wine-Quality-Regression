@@ -1,0 +1,53 @@
+---
+title: "wine"
+author: "Jacob Yeung"
+date: "4/6/2020"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(glmnet)
+data = read.csv('../winequality-red.csv', header = TRUE, sep = ";")
+y = data$quality
+x = cbind(fixed.acidity = data$fixed.acidity, volatile.acidity = data$volatile.acidity, citric.acid = data$citric.acid, residual.sugar = data$residual.sugar, chlorides = data$chlorides, free.sulfur.dioxide = data$free.sulfur.dioxide, total.sulfur.dioxide = data$total.sulfur.dioxide, density = data$density, pH = data$pH, sulphates = data$sulphates, alcohol = data$alcohol)
+```
+
+## Ordinary Least Squares
+
+```{r}
+xols = cbind(intercept = 1, x)
+olsresults = solve(t(xols)%*%xols)%*%(t(xols)%*%y)
+```
+
+The intercept and coefficients for the linear model created by ordinary least squares.
+
+```{r}
+olsresults
+```
+
+## Ridge Regression
+
+```{r ridge regression}
+cvfit = cv.glmnet(x, y, alpha = 0, intercept = TRUE)
+plot(cvfit, main = "Lambda (Tuning) vs MSE")
+rrbestlambda = cvfit$lambda.min
+rrresults = glmnet(x, y, lambda = rrbestlambda, alpha = 0, intercept = TRUE)
+```
+
+The minimum cross-validation error
+```{r}
+rrbestlambda
+```
+
+The intercept and coefficients for the linear model created by ridge regression.  
+```{r}
+coef(rrresults)
+```
+
+## Lasso Regression
+
+```{r lasso regression}
+
+```
+
