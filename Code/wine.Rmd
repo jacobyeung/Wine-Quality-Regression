@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 library(glmnet)
+library(caret)
 data = read.csv('../winequality-red.csv', header = TRUE, sep = ";")
 y = data$quality
 x = cbind(fixed.acidity = data$fixed.acidity, volatile.acidity = data$volatile.acidity, citric.acid = data$citric.acid, residual.sugar = data$residual.sugar, chlorides = data$chlorides, free.sulfur.dioxide = data$free.sulfur.dioxide, total.sulfur.dioxide = data$total.sulfur.dioxide, density = data$density, pH = data$pH, sulphates = data$sulphates, alcohol = data$alcohol)
@@ -29,18 +30,20 @@ olsresults
 ## Ridge Regression
 
 ```{r ridge regression}
-cvfit = cv.glmnet(x, y, alpha = 0, intercept = TRUE)
-plot(cvfit, main = "Lambda (Tuning) vs MSE")
-rrbestlambda = cvfit$lambda.min
+rrcvfit = cv.glmnet(x, y, alpha = 0, intercept = TRUE)
+plot(rrcvfit, main = "Lambda (Tuning) vs MSE")
+rrbestlambda = rrcvfit$lambda.min
 rrresults = glmnet(x, y, lambda = rrbestlambda, alpha = 0, intercept = TRUE)
 ```
 
-The minimum cross-validation error
+The minimum cross-validation error lambda value.
+
 ```{r}
 rrbestlambda
 ```
 
 The intercept and coefficients for the linear model created by ridge regression.  
+
 ```{r}
 coef(rrresults)
 ```
@@ -48,6 +51,43 @@ coef(rrresults)
 ## Lasso Regression
 
 ```{r lasso regression}
+lrcvfit = cv.glmnet(x, y, alpha = 1, intercept = TRUE)
+plot(lrcvfit, main = "Lambda (Tuning) vs MSE")
+lrbestlambda = lrcvfit$lambda.min
+lrresults = glmnet(x, y, lambda = lrbestlambda, alpha = 1, intercept = TRUE)
+```
 
+The minimum cross-validation error lambda value.  
+
+```{r}
+lrbestlambda
+```
+
+The intercept and coefficients for the linear model created by lasso regression.
+
+```{r}
+coef(lrresults)
+```
+
+## Elastic Net
+
+```{r}
+elastic_reg = train(x = x, y = y,
+                    method = "glmnet")
+encvfit = cv.glmnet(x, y, alpha = elastic_reg$bestTune$alpha, lambda = elastic_reg$finalModel$lambda, intercept = TRUE)
+plot(encvfit, main = "Lambda (Tuning for Optimal Alpha) vs MSE")
+enresults = glmnet(x, y, lambda = elastic_reg$bestTune$lambda, alpha = elastic_reg$bestTune$alpha, intercept = TRUE)
+```
+
+The minimum cross-validation error lambda and alpha value.  
+
+```{r}
+elastic_reg$bestTune
+```
+
+The intercept and coefficients for the linear model created by elastic net.
+
+```{r}
+coef(elastic_reg$finalModel, elastic_reg$finalModel$lambdaOpt)
 ```
 
